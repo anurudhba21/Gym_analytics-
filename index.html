@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gym & Weight Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .nav-tab {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .nav-tab.active,
+        .nav-tab:hover {
+            background: white;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .gym-toggle {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .gym-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .gym-option.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+            color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: transform 0.3s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f9f9f9;
+        }
+        
+        .history-date {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .history-stats {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .gym-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .gym-yes {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .gym-no {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .weight-trend {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        .trend-up {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .trend-down {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .trend-stable {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .insights {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .insights h3 {
+            margin-bottom: 15px;
+        }
+        
+        .insight-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏋️ Fitness Tracker</h1>
+            <p>Track your gym visits and weight daily with detailed analytics</p>
+        </div>
+        
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('entry')">📝 Add Entry</button>
+            <button class="nav-tab" onclick="showTab('history')">📚 History</button>
+            <button class="nav-tab" onclick="showTab('analytics')">📊 Analytics</button>
+            <button class="nav-tab" onclick="showTab('insights')">💡 Insights</button>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalEntries">0</div>
+                <div class="stat-label">Total Days Tracked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="gymDays">0</div>
+                <div class="stat-label">Gym Sessions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="attendance">0%</div>
+                <div class="stat-label">Gym Attendance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgWeight">0 kg</div>
+                <div class="stat-label">Average Weight</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="weightChange">0 kg</div>
+                <div class="stat-label">Weight Change</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Current Streak</div>
+            </div>
+        </div>
+        
+        <!-- Entry Tab -->
+        <div id="entry" class="tab-content active">
+            <div class="card">
+                <h2>Add New Entry</h2>
+                <div class="form-group">
+                    <label for="entryDate">Date:</label>
+                    <input type="date" id="entryDate">
+                </div>
+                <div class="form-group">
+                    <label for="entryWeight">Weight (kg):</label>
+                    <input type="number" id="entryWeight" step="0.1" placeholder="Enter your weight">
+                </div>
+                <div class="form-group">
+                    <label>Did you go to the gym today?</label>
+                    <div class="gym-toggle">
+                        <div class="gym-option" onclick="setGymStatus(true)">
+                            <strong>✅ Yes</strong><br>
+                            <small>Gym Day</small>
+                        </div>
+                        <div class="gym-option" onclick="setGymStatus(false)">
+                            <strong>❌ No</strong><br>
+                            <small>Rest Day</small>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn" onclick="saveEntry()">Save Entry</button>
+            </div>
+        </div>
+        
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <div class="card">
+                <h2>Your Fitness Journey</h2>
+                <div id="historyList"></div>
+            </div>
+        </div>
+        
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Weight Progress</h3>
+                    <canvas id="weightChart" width="400" height="200"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Gym Attendance</h3>
+                    <canvas id="gymChart" width="400" height="200"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Weekly Summary</h3>
+                    <canvas id="weeklyChart" width="400" height="200"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Monthly Trends</h3>
+                    <canvas id="monthlyChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Insights Tab -->
+        <div id="insights" class="tab-content">
+            <div class="insights">
+                <h3>🎯 Personalized Insights</h3>
+                <div id="insightsList"></div>
+            </div>
+            <div class="card">
+                <h3>📈 Progress Analysis</h3>
+                <div id="progressAnalysis"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fitnessData = [];
+        let currentGymStatus = null;
+        
+        // Load data from localStorage on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            setTodayDate();
+            updateStats();
+            updateHistory();
+        });
+        
+        function loadData() {
+            const savedData = localStorage.getItem('fitnessTrackerData');
+            if (savedData) {
+                fitnessData = JSON.parse(savedData);
+            }
+        }
+        
+        function saveData() {
+            localStorage.setItem('fitnessTrackerData', JSON.stringify(fitnessData));
+        }
+        
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('entryDate').value = today;
+        }
+        
+        function setGymStatus(status) {
+            currentGymStatus = status;
+            const options = document.querySelectorAll('.gym-option');
+            options.forEach(option => option.classList.remove('active'));
+            
+            if (status) {
+                options[0].classList.add('active');
+            } else {
+                options[1].classList.add('active');
+            }
+        }
+        
+        function saveEntry() {
+            const date = document.getElementById('entryDate').value;
+            const weight = parseFloat(document.getElementById('entryWeight').value);
+            
+            if (!date || !weight || currentGymStatus === null) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            // Remove existing entry for the same date
+            fitnessData = fitnessData.filter(entry => entry.date !== date);
+            
+            // Add new entry
+            fitnessData.push({
+                date: date,
+                weight: weight,
+                gym: currentGymStatus,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Sort by date
+            fitnessData.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            saveData();
+            updateStats();
+            updateHistory();
+            
+            // Reset form
+            document.getElementById('entryWeight').value = '';
+            currentGymStatus = null;
+            document.querySelectorAll('.gym-option').forEach(option => option.classList.remove('active'));
+            setTodayDate();
+            
+            alert('Entry saved successfully!');
+        }
+        
+        function deleteEntry(date) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                fitnessData = fitnessData.filter(entry => entry.date !== date);
+                saveData();
+                updateStats();
+                updateHistory();
+            }
+        }
+        
+        function updateStats() {
+            const totalEntries = fitnessData.length;
+            const gymDays = fitnessData.filter(entry => entry.gym).length;
+            const attendance = totalEntries > 0 ? Math.round((gymDays / totalEntries) * 100) : 0;
+            
+            let avgWeight = 0;
+            let weightChange = 0;
+            
+            if (totalEntries > 0) {
+                avgWeight = fitnessData.reduce((sum, entry) => sum + entry.weight, 0) / totalEntries;
+                
+                const sortedData = [...fitnessData].sort((a, b) => new Date(a.date) - new Date(b.date));
+                if (sortedData.length > 1) {
+                    weightChange = sortedData[sortedData.length - 1].weight - sortedData[0].weight;
+                }
+            }
+            
+            const streak = calculateCurrentStreak();
+            
+            document.getElementById('totalEntries').textContent = totalEntries;
+            document.getElementById('gymDays').textContent = gymDays;
+            document.getElementById('attendance').textContent = attendance + '%';
+            document.getElementById('avgWeight').textContent = avgWeight.toFixed(1) + ' kg';
+            document.getElementById('weightChange').textContent = (weightChange >= 0 ? '+' : '') + weightChange.toFixed(1) + ' kg';
+            document.getElementById('streak').textContent = streak;
+        }
+        
+        function calculateCurrentStreak() {
+            if (fitnessData.length === 0) return 0;
+            
+            const sortedData = [...fitnessData].sort((a, b) => new Date(b.date) - new Date(a.date));
+            let streak = 0;
+            
+            for (let entry of sortedData) {
+                if (entry.gym) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+            
+            return streak;
+        }
+        
+        function updateHistory() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            
+            if (fitnessData.length === 0) {
+                historyList.innerHTML = '<p style="text-align: center; color: #666;">No entries yet. Add your first entry!</p>';
+                return;
+            }
+            
+            fitnessData.forEach((entry, index) => {
+                const nextEntry = fitnessData[index + 1];
+                let trend = '';
+                let trendClass = '';
+                
+                if (nextEntry) {
+                    const diff = entry.weight - nextEntry.weight;
+                    if (Math.abs(diff) < 0.1) {
+                        trend = 'Stable';
+                        trendClass = 'trend-stable';
+                    } else if (diff > 0) {
+                        trend = `+${diff.toFixed(1)}kg`;
+                        trendClass = 'trend-up';
+                    } else {
+                        trend = `${diff.toFixed(1)}kg`;
+                        trendClass = 'trend-down';
+                    }
+                }
+                
+                const entryDate = new Date(entry.date);
+                const formattedDate = entryDate.toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <div class="history-date">${formattedDate}</div>
+                    <div class="history-stats">
+                        <strong>${entry.weight}kg</strong>
+                        ${trend ? `<span class="weight-trend ${trendClass}">${trend}</span>` : ''}
+                        <span class="gym-badge ${entry.gym ? 'gym-yes' : 'gym-no'}">
+                            ${entry.gym ? '🏋️ Gym' : '😴 Rest'}
+                        </span>
+                        <button class="delete-btn" onclick="deleteEntry('${entry.date}')">🗑️</button>
+                    </div>
+                `;
+                historyList.appendChild(historyItem);
+            });
+        }
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Update charts if analytics tab is selected
+            if (tabName === 'analytics') {
+                setTimeout(() => {
+                    updateCharts();
+                }, 100);
+            }
+            
+            // Update insights if insights tab is selected
+            if (tabName === 'insights') {
+                updateInsights();
+            }
+        }
+        
+        function updateCharts() {
+            if (fitnessData.length === 0) return;
+            
+            // Weight Progress Chart
+            const weightCtx = document.getElementById('weightChart').getContext('2d');
+            const sortedData = [...fitnessData].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            new Chart(weightCtx, {
+                type: 'line',
+                data: {
+                    labels: sortedData.map(entry => entry.date),
+                    datasets: [{
+                        label: 'Weight (kg)',
+                        data: sortedData.map(entry => entry.weight),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+            
+            // Gym Attendance Chart
+            const gymCtx = document.getElementById('gymChart').getContext('2d');
+            const gymDays = fitnessData.filter(entry => entry.gym).length;
+            const restDays = fitnessData.length - gymDays;
+            
+            new Chart(gymCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Gym Days', 'Rest Days'],
+                    datasets: [{
+                        data: [gymDays, restDays],
+                        backgroundColor: ['#28a745', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Weekly Summary Chart
+            const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+            const weeklyData = getWeeklyData();
+            
+            new Chart(weeklyCtx, {
+                type: 'bar',
+                data: {
+                    labels: weeklyData.map(week => `Week ${week.week}`),
+                    datasets: [{
+                        label: 'Gym Sessions',
+                        data: weeklyData.map(week => week.gymSessions),
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 7
+                        }
+                    }
+                }
+            });
+            
+            // Monthly Trends Chart
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            const monthlyData = getMonthlyData();
+            
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.map(month => month.month),
+                    datasets: [{
+                        label: 'Avg Weight',
+                        data: monthlyData.map(month => month.avgWeight),
+                        borderColor: '#764ba2',
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Gym Sessions',
+                        data: monthlyData.map(month => month.gymSessions),
+                        borderColor: '#28a745',
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    }
+                }
+            });
+        }
+        
+        function getWeeklyData() {
+            const weeks = {};
+            
+            fitnessData.forEach(entry => {
+                const date = new Date(entry.date);
+                const weekStart = new Date(date.setDate(date.getDate() - date.getDay()));
+                const weekKey = weekStart.toISOString().split('T')[0];
+                
+                if (!weeks[weekKey]) {
+                    weeks[weekKey] = { gymSessions: 0, entries: 0 };
+                }
+                
+                weeks[weekKey].entries++;
+                if (entry.gym) {
+                    weeks[weekKey].gymSessions++;
+                }
+            });
+            
+            return Object.keys(weeks).map((weekKey, index) => ({
+                week: index + 1,
+                gymSessions: weeks[weekKey].gymSessions,
+                entries: weeks[weekKey].entries
+            }));
+        }
+        
+        function getMonthlyData() {
+            const months = {};
+            
+            fitnessData.forEach(entry => {
+                const date = new Date(entry.date);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                if (!months[monthKey]) {
+                    months[monthKey] = { totalWeight: 0, gymSessions: 0, entries: 0 };
+                }
+                
+                months[monthKey].totalWeight += entry.weight;
+                months[monthKey].entries++;
+                if (entry.gym) {
+                    months[monthKey].gymSessions++;
+                }
+            });
+            
+            return Object.keys(months).map(monthKey => ({
+                month: monthKey,
+                avgWeight: (months[monthKey].totalWeight / months[monthKey].entries).toFixed(1),
+                gymSessions: months[monthKey].gymSessions
+            }));
+        }
+        
+        function updateInsights() {
+            const insightsList = document.getElementById('insightsList');
+            const progressAnalysis = document.getElementById('progressAnalysis');
+            
+            if (fitnessData.length === 0) {
+                insightsList.innerHTML = '<div class="insight-item">Start tracking to get personalized insights!</div>';
+                progressAnalysis.innerHTML = '<p>No data available for analysis.</p>';
+                return;
+            }
+            
+            const insights = generateInsights();
+            insightsList.innerHTML = insights.map(insight => 
+                `<div class="insight-item"><strong>${insight.title}:</strong> ${insight.description}</div>`
+            ).join('');
+            
+            const analysis = generateProgressAnalysis();
+            progressAnalysis.innerHTML = analysis;
+        }
+        
+        function generateInsights() {
+            const insights = [];
+            const totalEntries = fitnessData.length;
+            const gymDays = fitnessData.filter(entry => entry.gym).length;
+            const attendance = (gymDays / totalEntries) * 100;
+            
+            // Attendance insights
+            if (attendance >= 80) {
+                insights.push({
+                    title: "Excellent Consistency",
+                    description: `You're maintaining ${attendance.toFixed(0)}% gym attendance. Keep it up!`
+                });
+            } else if (attendance >= 60) {
+                insights.push({
+                    title: "Good Progress",
+                    description: `${attendance.toFixed(0)}% attendance is solid. Try to aim for 3-4 sessions per week.`
+                });
+            } else {
+                insights.push({
+                    title: "Room for Improvement",
+                    description: `Your ${attendance.toFixed(0)}% attendance suggests you could benefit from more regular sessions.`
+                });
+            }
+            
+            // Weight trend insights
+            const sortedData = [...fitnessData].sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (sortedData.length > 1) {
+                const weightChange = sortedData[sortedData.length - 1].weight - sortedData[0].weight;
+                if (weightChange < -2) {
+                    insights.push({
+                        title: "Weight Loss Trend",
+                        description: `You've lost ${Math.abs(weightChange).toFixed(1)}kg since you started tracking!`
+                    });
+                } else if (weightChange > 2) {
+                    insights.push({
+                        title: "Weight Gain Trend",
+                        description: `You've gained ${weightChange.toFixed(1)}kg. Monitor if this aligns with your goals.`
+                    });
+                } else {
+                    insights.push({
+                        title: "Stable Weight",
+                        description: "Your weight has remained relatively stable, which is great for maintenance."
+                    });
+                }
+            }
+            
+            // Streak insights
+            const streak = calculateCurrentStreak();
+            if (streak >= 7) {
+                insights.push({
+                    title: "Amazing Streak!",
+                    description: `You're on a ${streak}-day gym streak! Your dedication is paying off.`
+                });
+            } else if (streak >= 3) {
+                insights.push({
+                    title: "Building Momentum",
+                    description: `${streak} days in a row! Keep building that habit.`
+                });
+            }
+            
+            return insights;
+        }
+        
+        function generateProgressAnalysis() {
+            const totalEntries = fitnessData.length;
+            const gymDays = fitnessData.filter(entry => entry.gym).length;
+            const restDays = totalEntries - gymDays;
+            
+            let analysis = `
+                <h4>📊 Overall Statistics</h4>
+                <p>• Total days tracked: <strong>${totalEntries}</strong></p>
+                <p>• Gym sessions: <strong>${gymDays}</strong></p>
+                <p>• Rest days: <strong>${restDays}</strong></p>
+                <p>• Average sessions per week: <strong>${((gymDays / totalEntries) * 7).toFixed(1)}</strong></p>
+            `;
+            
+            if (fitnessData.length > 7) {
+                const last7Days = fitnessData.slice(0, 7);
+                const gymSessionsLast7 = last7Days.filter(entry => entry.gym).length;
+                
+                analysis += `
+                    <h4>📅 Last 7 Days</h4>
+                    <p>• Gym sessions: <strong>${gymSessionsLast7}/7</strong></p>
+                    <p>• Attendance rate: <strong>${((gymSessionsLast7/7)*100).toFixed(0)}%</strong></p>
+                `;
+            }
+            
+            if (fitnessData.length >= 30) {
+                const last30Days = fitnessData.slice(0, 30);
+                const gymSessionsLast30 = last30Days.filter(entry => entry.gym).length;
+                
+                analysis += `
+                    <h4>📈 Last 30 Days</h4>
+                    <p>• Gym sessions: <strong>${gymSessionsLast30}/30</strong></p>
+                    <p>• Consistency: <strong>${((gymSessionsLast30/30)*100).toFixed(0)}%</strong></p>
+                `;
+            }
+            
+            return analysis;
+        }
+    </script>
+</body>
+</html>
